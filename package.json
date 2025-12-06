@@ -1,0 +1,21 @@
+{
+  "name": "draw-over-extension",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite build --watch",
+    "build": "npm run copy-files && tsc && vite build",
+    "copy-files": "node scripts/copy-files.js",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "typescript": "~5.9.3",
+    "vite": "^7.2.4"
+  },
+  "dependencies": {
+    "chrome-types": "^0.1.390",
+    "html2canvas": "^1.4.1"
+  }
+}
