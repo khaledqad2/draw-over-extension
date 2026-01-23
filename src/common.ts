@@ -1,3 +1,15 @@
+/**
+ * This module injects a drawing overlay UI into the current webpage, allowing
+ * users to draw annotations (lines, arrows, shapes, text, etc.) directly over
+ * the page content. It also provides functionality to capture the entire page
+ * as an image using html2canvas and download it as a PNG snapshot.
+ *
+ * - Dynamically injects a floating toolbar into the DOM
+ * - Initializes and controls a DrawOver instance for drawing interactions
+ * - Allows switching tools, colors, clearing drawings, and activating/deactivating drawing mode
+ * - Exposes a global function to trigger UI injection from an external script
+ */
+
 import html2canvas from "html2canvas";
 import DrawOver from "./DrawOver";
 
@@ -39,16 +51,65 @@ const injectDrawOverUI = () => {
     <button id="arrow">Arrow</button>
     <button id="drumstick">Drumstick</button>
     <button id="rectangle">Rectangle</button>
-    <button id="black-color">Black</button>
-    <button id="red-color">Red</button>
+    <button id="text">Text</button>
     <button id="save" style="background-color: chocolate; color: white;">Save Snapshot</button>
+    <button id="colorButton" style="background-color: red;">Choose Color</button>
+
+  <div id="palette">
+    <div class="color" style="background: red;"></div>
+    <div class="color" style="background: green;"></div>
+    <div class="color" style="background: blue;"></div>
+    <div class="color" style="background: black;"></div>
+    <div class="color" style="background: orange;"></div>
+  </div>
   </div>
   `;
 
   document.body.prepend(container);
 
   const drawer = new DrawOver({ strokeColor: "red", strokeWidth: 3 });
+  /**
+   * for more user friendly behavior, activate drawing mode immediately upon clicking "Activate Drawing" button
+   */
+  drawer.activate();
+  drawer.setTool("line");
+  /**
+   * create and control color palette
+   */
 
+  const button = document.getElementById("colorButton");
+  const palette = document.getElementById("palette");
+
+  button!.addEventListener("click", (e) => {
+    e.stopPropagation();
+    palette!.style.display =
+      palette!.style.display === "block" ? "none" : "block";
+
+    const rect = button!.getBoundingClientRect();
+    palette!.style.left = rect.left + "px";
+    palette!.style.top = rect.bottom + "px";
+    palette!.style.zIndex = "10000";
+  });
+
+  palette!.addEventListener("click", (e) => {
+    e.stopPropagation();
+
+    if (
+      e.target instanceof HTMLElement &&
+      e.target.classList.contains("color")
+    ) {
+      drawer.setOptions({ strokeColor: e.target.style.backgroundColor });
+      if (button) {
+        button.style.backgroundColor = e.target.style.backgroundColor;
+      }
+      palette!.style.display = "none";
+    }
+  });
+
+  // Hide palette when clicking anywhere else
+  document.addEventListener("click", () => {
+    palette!.style.display = "none";
+  });
   document.getElementById("activate")!.onclick = () => {
     drawer.activate();
     drawer.setTool("line");
@@ -62,9 +123,10 @@ const injectDrawOverUI = () => {
     drawer.setTool("drumstick");
   document.getElementById("rectangle")!.onclick = () =>
     drawer.setTool("rectangle");
+  document.getElementById("text")!.onclick = () => drawer.setTool("text");
   document.getElementById("save")!.onclick = () => saveImage();
   document.getElementById("black-color")!.onclick = () =>
-    drawer.setOptions({ strokeColor: "black" });
+    drawer.setOptions({ strokeColor: "green" });
   document.getElementById("red-color")!.onclick = () =>
     drawer.setOptions({ strokeColor: "red" });
 };

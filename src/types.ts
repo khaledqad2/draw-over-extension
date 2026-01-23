@@ -10,7 +10,13 @@ export interface DrawOverOptions {
   zIndex?: number;
 }
 
-export type ToolType = "pencil" | "line" | "arrow" | "drumstick" | "rectangle";
+export type ToolType =
+  | "pencil"
+  | "line"
+  | "arrow"
+  | "drumstick"
+  | "rectangle"
+  | "text";
 
 export interface Shape {
   id: string;

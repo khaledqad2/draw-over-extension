@@ -5,6 +5,7 @@ import { LineTool } from "./tools/LineTool";
 import { ArrowTool } from "./tools/ArrowTool";
 import { DrumStick } from "./tools/DrumStick";
 import { RectangleTool } from "./tools/RectangleTool";
+import { TextTool } from "./tools/TextTool";
 import "./styles.css";
 
 export class DrawOver {
@@ -32,6 +33,7 @@ export class DrawOver {
     this.tools.set("arrow", new ArrowTool(this.options));
     this.tools.set("drumstick", new DrumStick(this.options));
     this.tools.set("rectangle", new RectangleTool(this.options));
+    this.tools.set("text", new TextTool(this.options));
 
     // Set default tool
     this.currentTool = this.tools.get("line")!;
@@ -69,6 +71,13 @@ export class DrawOver {
   public setTool(toolType: ToolType): void {
     const tool = this.tools.get(toolType);
     if (tool) {
+      // Finalize any active text editing before switching tools
+      if (this.currentTool instanceof TextTool) {
+        const shape = (this.currentTool as TextTool).finalize();
+        if (shape) {
+          this.shapes.push(shape);
+        }
+      }
       this.currentTool = tool;
     }
   }
@@ -143,7 +152,7 @@ export class DrawOver {
       body.offsetHeight,
       html.clientHeight,
       html.scrollHeight,
-      html.offsetHeight
+      html.offsetHeight,
     );
 
     // Calculate the document max-width
@@ -152,7 +161,7 @@ export class DrawOver {
       body.offsetWidth,
       html.clientWidth,
       html.scrollWidth,
-      html.offsetWidth
+      html.offsetWidth,
     );
 
     // Create SVG element
@@ -186,9 +195,21 @@ export class DrawOver {
   private handleMouseDown = (e: MouseEvent): void => {
     if (!this.currentTool || !this.svg) return;
 
-    // Prevent interaction with underlying elements during drawing
-    e.preventDefault();
-    e.stopPropagation();
+    // For text tool, allow normal pointer interaction
+    if (this.currentTool instanceof TextTool) {
+      // Check if clicking on existing text
+      const target = e.target as HTMLElement;
+      if (
+        target.contentEditable === "true" ||
+        target.closest("[contenteditable]")
+      ) {
+        return; // Let the text input handle it
+      }
+    } else {
+      // Prevent interaction with underlying elements during drawing
+      e.preventDefault();
+      e.stopPropagation();
+    }
 
     this.isDrawing = true;
     // Bring SVG to front while drawing
@@ -203,6 +224,9 @@ export class DrawOver {
   private handleMouseMove = (e: MouseEvent): void => {
     if (!this.isDrawing || !this.currentTool) return;
 
+    // Text tool doesn't need move events
+    if (this.currentTool instanceof TextTool) return;
+
     const point = this.getMousePosition(e);
     this.currentTool.onMove(point);
   };
@@ -212,6 +236,13 @@ export class DrawOver {
 
     this.isDrawing = false;
     const point = this.getMousePosition(e);
+
+    // For text tool, the shape is created later when text is finalized
+    if (this.currentTool instanceof TextTool) {
+      // Keep pointer events on for text editing
+      return;
+    }
+
     const shape = this.currentTool.onEnd(point);
 
     if (shape) {

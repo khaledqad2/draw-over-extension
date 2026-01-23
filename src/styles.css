@@ -118,3 +118,24 @@ button:hover {
 #draw-over-overlay {
   top: 30px;
 }
+
+#palette {
+  position: absolute;
+  margin-top: 8px;
+  display: none;
+  background: #fff;
+  border: 1px solid #ccc;
+  padding: 8px;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  gap: 6px;
+}
+
+.color {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  cursor: pointer;
+  border: 1px solid #999;
+  display: inline-block;
+}
